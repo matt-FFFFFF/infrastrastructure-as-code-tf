@@ -11,6 +11,7 @@ pr:
 
 variables:
   keyvault: tfsecrets-mawhi
+  TF_IN_AUTOMATION: 1
 
 pool:
   vmImage: 'Ubuntu-16.04'
@@ -23,25 +24,13 @@ steps:
     keyVaultName: $(keyvault)
     SecretsFilter: '*'
 
-- script: export TF_IN_AUTOMATION=1
-  displayName: Set TF automation environment variable
-
-- script: |
-    echo "access_key = $terraformbackendaccesskey" > backend.tfvars
-    echo "container_name = $terraformbackendcontainername" >>backend.tfvars
-    echo "key = $terraformbackendkey" >> backend.tfvars
-    echo "storage_account_name = $terraformbackendstorageaccountname" >> backend.tfvars
-    echo "environment = $terraformbackendenvironment" >> backend.tfvars
-  displayName: 'Write backend secrets file'
-  env:
-    terraformbackendstorageaccountname: $(terraform-backend-storage-account-name)
-    terraformbackendenvironment: $(terraform-backend-environment)
-    terraformbackendkey: $(terraform-backend-key)
-    terraformbackendcontainername: $(terraform-backend-container-name)
-    terraformbackendaccesskey: $(terraform-backend-access-key)
-
 - script: cat backend.tfvars
   displayName: List backend secrets
 
-- script: terraform init -input=false -backend-config="backend.tfvars"
+- script: |
+    terraform init -input=false -backend-config="container_name=$(terraform-backend-container-name)" \
+    -backend-config="access_key=$(terraform-backend-access-key)" \
+    -backend-config="key=$(terraform-backend-key)" \
+    -backend-config="storage_account_name=$(terraform-backend-storage-account-name)" \
+    -backend-config="environment=$(terraform-backend-environment)"
   displayName: Terraform init
