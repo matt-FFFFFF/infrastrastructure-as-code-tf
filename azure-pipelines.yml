@@ -27,18 +27,18 @@ steps:
   displayName: Set TF automation environment variable
 
 - script: |
-    echo "access_key = $terraform-backend-access-key" > backend.tfvars
-    echo "container_name = $terraform-backend-container-name" >>backend.tfvars
-    echo "key = $terraform-backend-key" >> backend.tfvars
-    echo "storage_account_name = $terraform-backend-storage-account-name" >> backend.tfvars
-    echo "environment = $terraform-backend-environment" >> backend.tfvars
+    echo "access_key = $terraformbackendaccesskey" > backend.tfvars
+    echo "container_name = $terraformbackendcontainername" >>backend.tfvars
+    echo "key = $terraformbackendkey" >> backend.tfvars
+    echo "storage_account_name = $terraformbackendstorageaccountname" >> backend.tfvars
+    echo "environment = $terraformbackendenvironment" >> backend.tfvars
   displayName: 'Write backend secrets file'
   env:
-    terraform-backend-storage-account-name: $(terraform-backend-storage-account-name)
-    terraform-backend-environment: $(terraform-backend-environment)
-    terraform-backend-key: $(terraform-backend-key)
-    terraform-backend-container-name: $(terraform-backend-container-name)
-    terraform-backend-access-key: $(terraform-backend-access-key)
+    terraformbackendstorageaccountname: $(terraform-backend-storage-account-name)
+    terraformbackendenvironment: $(terraform-backend-environment)
+    terraformbackendkey: $(terraform-backend-key)
+    terraformbackendcontainername: $(terraform-backend-container-name)
+    terraformbackendaccesskey: $(terraform-backend-access-key)
 
 - script: cat backend.tfvars
   displayName: List backend secrets
