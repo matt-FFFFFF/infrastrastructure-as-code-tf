@@ -6,6 +6,12 @@
 trigger:
 - master
 
+pr:
+- master
+
+variables:
+  keyvault: tfsecrets-mawhi
+
 pool:
   vmImage: 'Ubuntu-16.04'
 
@@ -13,7 +19,7 @@ steps:
 - task: AzureKeyVault@1
   inputs:
     ConnectedServiceName: azurerm-prod
-    keyVaultName: tfsecrets
+    keyVaultName: $(keyvault)
 
 - script: echo Done
   displayName: 'Run a one-line script'
