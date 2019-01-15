@@ -24,9 +24,6 @@ steps:
     keyVaultName: $(keyvault)
     SecretsFilter: '*'
 
-- script: cat backend.tfvars
-  displayName: List backend secrets
-
 - script: |
     terraform init -input=false -backend-config="container_name=$(terraform-backend-container-name)" \
     -backend-config="access_key=$(terraform-backend-access-key)" \
