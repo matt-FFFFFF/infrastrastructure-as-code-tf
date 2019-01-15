@@ -40,5 +40,8 @@ steps:
     terraform-backend-container-name: $(terraform-backend-container-name)
     terraform-backend-access-key: $(terraform-backend-access-key)
 
+- script: cat backend.tfvars
+  displayName: List backend secrets
+
 - script: terraform init -input=false -backend-config="backend.tfvars"
   displayName: Terraform init
