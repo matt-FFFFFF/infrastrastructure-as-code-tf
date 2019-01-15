@@ -14,7 +14,6 @@ steps:
   inputs:
     ConnectedServiceName: azurerm-prod
     keyVaultName: tfsecrets
-    secretsFilter: 'terraform-backend-*'
 
 - script: echo Done
   displayName: 'Run a one-line script'
