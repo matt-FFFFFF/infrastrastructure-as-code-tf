@@ -10,6 +10,12 @@ pool:
   vmImage: 'Ubuntu-16.04'
 
 steps:
-- script: echo Hello, world!
+- task: AzureKeyVault@1
+  inputs:
+    ConnectedServiceName: azurerm-prod
+    keyVaultName: tfsecrets
+    secretsFilter: 'terraform-backend-*'
+
+- script: echo Done
   displayName: 'Run a one-line script'
 
