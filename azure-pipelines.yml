@@ -17,10 +17,22 @@ pool:
 
 steps:
 - task: AzureKeyVault@1
+  displayName: Get secrets from KeyVault
   inputs:
     ConnectedServiceName: azurerm-prod
     keyVaultName: $(keyvault)
+    SecretsFilter: '*'
 
-- script: echo Done
-  displayName: 'Run a one-line script'
+- script: export TF_IN_AUTOMATION=1
+  displayName: Set TF automation environment variable
 
+- script: |
+    echo "access_key = $(terraform-backend-access-key)" > backend.tfvars
+    echo "container_name = $(terraform-backend-container-name)" >>backend.tfvars
+    echo "key = $(terraform-backend-key)" >> backend.tfvars
+    echo "storage_account_name = $(terraform-backend-storage-account-name)" >> backend.tfvars
+    echo "environment = $(terraform-backend-environment)" >> backend.tfvars
+  displayName: 'Write backend secrets file'
+
+- script: terraform init -input=false -backend-config="backend.tfvars"
+  displayName: Terraform init
