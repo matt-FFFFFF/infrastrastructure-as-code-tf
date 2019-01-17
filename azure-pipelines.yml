@@ -29,9 +29,9 @@ steps:
     -backend-config="key=$(terraform-backend-key)" \
     -backend-config="storage_account_name=$(terraform-backend-storage-account-name)" \
     -backend-config="environment=$(terraform-backend-environment)"
-  displayName: 'Terraform init'
+  displayName: Terraform init
 
-- script: terraform plan -input=false -out='tfplan'
+- script: terraform plan -input=false -out='$(Build.ArtifactStagingDirectory)/tfplan'
   displayName: Terraform plan
   env:
     TF_VAR_AZURERM_CLIENT_ID: $(azurerm-client-id)
