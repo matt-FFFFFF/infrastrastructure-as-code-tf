@@ -30,17 +30,28 @@ steps:
     -backend-config="storage_account_name=$(terraform-backend-storage-account-name)" \
     -backend-config="environment=$(terraform-backend-environment)"
   displayName: Terraform init
+  workingDirectory: $(Build.SourcesDirectory)
 
-- script: terraform plan -input=false -out='$(Build.ArtifactStagingDirectory)/tfplan'
+- script: terraform plan -input=false -out='tfplan'
   displayName: Terraform plan
+  workingDirectory: $(Build.SourcesDirectory)
   env:
     TF_VAR_AZURERM_CLIENT_ID: $(azurerm-client-id)
     TF_VAR_AZURERM_CLIENT_SECRET: $(azurerm-client-secret)
     TF_VAR_AZURERM_SUBSCRIPTION_ID: $(azurerm-subscription-id)
     TF_VAR_AZURERM_TENANT_ID: $(azurerm-tenant-id)
 
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: $(Build.SourcesDirectory)
+    TargetFolder: $(Build.ArtifactStagingDirectory)
+    Contents: |
+     **/*
+     !.git/**/*
+  displayName: Copy files to staging directory
+
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: $(Build.ArtifactStagingDirectory)
     ArtifactName: tfplan
-  displayName: Copy build artificats
+  displayName: Copy build artifacts
