@@ -9,6 +9,7 @@ pr:
 
 variables:
   keyvault: tfsecrets-mawhi
+  azureservice: azurerm-prod
   TF_IN_AUTOMATION: 1
 
 pool:
@@ -18,7 +19,7 @@ steps:
 - task: AzureKeyVault@1
   displayName: Get secrets from KeyVault
   inputs:
-    ConnectedServiceName: azurerm-prod
+    ConnectedServiceName: $(azureservice)
     keyVaultName: $(keyvault)
     SecretsFilter: '*'
 
@@ -35,10 +36,5 @@ steps:
     TF_VAR_AZURERM_CLIENT_SECRET=$(azurerm-client-secret) \
     TF_VAR_AZURERM_SUBSCRIPTION_ID=$(azurerm-subscription-id) \
     TF_VAR_AZURERM_TENANT_ID=$(azurerm-tenant-id) \
-    terraform plan -input=false -out=tfplan \
-    -backend-config="container_name=$(terraform-backend-container-name)" \
-    -backend-config="access_key=$(terraform-backend-access-key)" \
-    -backend-config="key=$(terraform-backend-key)" \
-    -backend-config="storage_account_name=$(terraform-backend-storage-account-name)" \
-    -backend-config="environment=$(terraform-backend-environment)"
+    terraform plan -input=false -out=tfplan
   displayName: Terraform plan

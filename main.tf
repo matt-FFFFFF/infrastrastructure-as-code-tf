@@ -11,10 +11,10 @@ variable "AZURERM_TENANT_ID" {}
 
 provider "azurerm" {
   version         = "~> 1.15"
-  subscription_id = "${var.azure_subscription_id}"
-  client_id       = "${var.azure_client_id}"
-  client_secret   = "${var.azure_client_secret}"
-  tenant_id       = "${var.azure_tenant_id}"
+  subscription_id = "${var.AZURERM_SUBSCRIPTION_ID}"
+  client_id       = "${var.AZURERM_CLIENT_ID}"
+  client_secret   = "${var.AZURERM_CLIENT_SECRET}"
+  tenant_id       = "${var.AZURERM_TENANT_ID}"
 }
 
 resource "azurerm_resource_group" "testrg" {
