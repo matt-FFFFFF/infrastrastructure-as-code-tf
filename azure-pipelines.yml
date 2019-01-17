@@ -1,5 +1,5 @@
-# Pipeline to perform a terraform init & terraform plan
-# https://aka.ms/yaml
+# Azure DevOps Pipeline to perform a terraform init & terraform plan
+# Matt White @ Microsoft https://github.com/matt-FFFFFF
 
 trigger:
 - master
