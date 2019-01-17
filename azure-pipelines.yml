@@ -1,5 +1,5 @@
-# Pipeline to perform a terraform init & terraform plan
-# https://aka.ms/yaml
+# Azure DevOps Pipeline to perform a terraform init & terraform plan
+# Matt White @ Microsoft https://github.com/matt-FFFFFF
 
 trigger:
 - master
@@ -52,15 +52,6 @@ steps:
     TF_VAR_AZURERM_CLIENT_SECRET: $(azurerm-client-secret)
     TF_VAR_AZURERM_SUBSCRIPTION_ID: $(azurerm-subscription-id)
     TF_VAR_AZURERM_TENANT_ID: $(azurerm-tenant-id)
-
-- task: CopyFiles@2
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)
-    TargetFolder: $(Build.ArtifactStagingDirectory)
-    Contents: |
-     **/*
-     !.git/**/*
-  displayName: Copy files to staging directory
 
 - task: PublishBuildArtifacts@1
   inputs:
