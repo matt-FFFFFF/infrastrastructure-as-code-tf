@@ -23,6 +23,18 @@ steps:
     keyVaultName: $(keyvault)
     SecretsFilter: '*'
 
+- script: md $(Agent.WorkFolder)/tf
+  displayName: Create consistent tf directory
+
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: $(Build.SourcesDirectory)
+    TargetFolder: $(Agent.WorkFolder)/tf
+    Contents: |
+     **/*
+     !.git/**/*
+  displayName: Copy files to staging directory (excluding .git)
+
 - script: |
     terraform init -input=false -backend-config="container_name=$(terraform-backend-container-name)" \
     -backend-config="access_key=$(terraform-backend-access-key)" \
@@ -30,28 +42,19 @@ steps:
     -backend-config="storage_account_name=$(terraform-backend-storage-account-name)" \
     -backend-config="environment=$(terraform-backend-environment)"
   displayName: Terraform init
-  workingDirectory: $(Build.SourcesDirectory)
+  workingDirectory: $(Agent.WorkFolder)/tf
 
 - script: terraform plan -input=false -out='tfplan'
   displayName: Terraform plan
-  workingDirectory: $(Build.SourcesDirectory)
+  workingDirectory: $(Agent.WorkFolder)/tf
   env:
     TF_VAR_AZURERM_CLIENT_ID: $(azurerm-client-id)
     TF_VAR_AZURERM_CLIENT_SECRET: $(azurerm-client-secret)
     TF_VAR_AZURERM_SUBSCRIPTION_ID: $(azurerm-subscription-id)
     TF_VAR_AZURERM_TENANT_ID: $(azurerm-tenant-id)
 
-- task: CopyFiles@2
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)
-    TargetFolder: $(Build.ArtifactStagingDirectory)
-    Contents: |
-     **/*
-     !.git/**/*
-  displayName: Copy files to staging directory
-
 - task: PublishBuildArtifacts@1
   inputs:
-    PathtoPublish: $(Build.ArtifactStagingDirectory)
+    PathtoPublish: $(Agent.WorkFolder)/tf
     ArtifactName: tfplan
   displayName: Copy build artifacts
