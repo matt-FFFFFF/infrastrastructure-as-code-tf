@@ -16,6 +16,9 @@ pool:
   vmImage: 'Ubuntu-16.04'
 
 steps:
+- script: echo $TF_IN_AUTOMATION
+  displayName: Test variable to env
+
 - task: AzureKeyVault@1
   displayName: Get secrets from KeyVault
   inputs:
@@ -29,12 +32,18 @@ steps:
     -backend-config="key=$(terraform-backend-key)" \
     -backend-config="storage_account_name=$(terraform-backend-storage-account-name)" \
     -backend-config="environment=$(terraform-backend-environment)"
-  displayName: Terraform init
+  displayName: 'Terraform init'
 
 - script: |
-    TF_VAR_AZURERM_CLIENT_ID=$(azurerm-client-id) \
-    TF_VAR_AZURERM_CLIENT_SECRET=$(azurerm-client-secret) \
-    TF_VAR_AZURERM_SUBSCRIPTION_ID=$(azurerm-subscription-id) \
-    TF_VAR_AZURERM_TENANT_ID=$(azurerm-tenant-id) \
-    terraform plan -input=false -out=tfplan
+    TF_VAR_AZURERM_CLIENT_ID="$(azurerm-client-id) \
+    TF_VAR_AZURERM_CLIENT_SECRET="$(azurerm-client-secret)" \
+    TF_VAR_AZURERM_SUBSCRIPTION_ID="$(azurerm-subscription-id)" \
+    TF_VAR_AZURERM_TENANT_ID="$(azurerm-tenant-id)" \
+    terraform plan -input=false -out='tfplan'
   displayName: Terraform plan
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: $(Build.ArtifactStagingDirectory)
+    ArtifactName: tfplan
+  displayName: Copy build artificats
