@@ -4,10 +4,10 @@ terraform {
   backend "azurerm" {}
 }
 
-variable "azure_subscription_id" {}
-variable "azure_client_id" {}
-variable "azure_client_secret" {}
-variable "azure_tenant_id" {}
+variable "AZURERM_SUBSCRIPTION_ID" {}
+variable "AZURERM_CLIENT_ID" {}
+variable "AZURERM_CLIENT_SECRET" {}
+variable "AZURERM_TENANT_ID" {}
 
 provider "azurerm" {
   version         = "~> 1.15"
@@ -15,4 +15,14 @@ provider "azurerm" {
   client_id       = "${var.azure_client_id}"
   client_secret   = "${var.azure_client_secret}"
   tenant_id       = "${var.azure_tenant_id}"
+}
+
+resource "azurerm_resource_group" "testrg" {
+  count    = "1"
+  name     = "testrg"
+  location = "westeurope"
+
+  tags {
+    provisioned_by = "terraform"
+  }
 }

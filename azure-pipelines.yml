@@ -1,6 +1,4 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
+# Pipeline to perform a terraform init & terraform plan
 # https://aka.ms/yaml
 
 trigger:
@@ -31,3 +29,16 @@ steps:
     -backend-config="storage_account_name=$(terraform-backend-storage-account-name)" \
     -backend-config="environment=$(terraform-backend-environment)"
   displayName: Terraform init
+
+- script: |
+    TF_VAR_AZURERM_CLIENT_ID=$(azurerm-client-id) \
+    TF_VAR_AZURERM_CLIENT_SECRET=$(azurerm-client-secret) \
+    TF_VAR_AZURERM_SUBSCRIPTION_ID=$(azurerm-subscription-id) \
+    TF_VAR_AZURERM_TENANT_ID=$(azurerm-tenant-id) \
+    terraform plan -input=false -out=tfplan \
+    -backend-config="container_name=$(terraform-backend-container-name)" \
+    -backend-config="access_key=$(terraform-backend-access-key)" \
+    -backend-config="key=$(terraform-backend-key)" \
+    -backend-config="storage_account_name=$(terraform-backend-storage-account-name)" \
+    -backend-config="environment=$(terraform-backend-environment)"
+  displayName: Terraform plan
