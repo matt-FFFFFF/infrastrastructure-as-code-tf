@@ -23,8 +23,8 @@ steps:
     keyVaultName: $(keyvault)
     SecretsFilter: '*'
 
-- script: md $(Agent.WorkFolder)/tf
-  displayName: Create consistent tf directory
+- script: mkdir $(Agent.WorkFolder)/tf
+  displayName: "Create 'tf' directory"
 
 - task: CopyFiles@2
   inputs:
