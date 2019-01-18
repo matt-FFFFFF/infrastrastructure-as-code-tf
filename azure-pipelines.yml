@@ -72,3 +72,4 @@ steps:
     PathtoPublish: $(Agent.WorkFolder)/tfroot
     ArtifactName: tfplan
   displayName: Copy build artifacts
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'master'))
