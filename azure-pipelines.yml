@@ -50,7 +50,7 @@ steps:
   displayName: Copy files to staging directory (excluding .git)
 
 - script: |
-    terraform init -input=false -backend-config="container_name=$(terraform-backend-container-name)" \
+    terraform init -no-color -input=false -backend-config="container_name=$(terraform-backend-container-name)" \
     -backend-config="access_key=$(terraform-backend-access-key)" \
     -backend-config="key=$(terraform-backend-key)" \
     -backend-config="storage_account_name=$(terraform-backend-storage-account-name)" \
@@ -58,7 +58,7 @@ steps:
   displayName: Terraform init
   workingDirectory: $(Agent.WorkFolder)/tfroot/tf-files
 
-- script: terraform plan -input=false -out='tfplan'
+- script: terraform plan -no-color -input=false -out='tfplan'
   displayName: Terraform plan
   workingDirectory: $(Agent.WorkFolder)/tfroot/tf-files
   env:
@@ -72,3 +72,4 @@ steps:
     PathtoPublish: $(Agent.WorkFolder)/tfroot
     ArtifactName: tfplan
   displayName: Copy build artifacts
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
