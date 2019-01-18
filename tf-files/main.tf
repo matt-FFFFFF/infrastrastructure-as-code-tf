@@ -26,3 +26,13 @@ resource "azurerm_resource_group" "testrg" {
     provisioned_by = "terraform"
   }
 }
+
+resource "azurerm_resource_group" "testrg2" {
+  count    = "1"
+  name     = "testrg2"
+  location = "westeurope"
+
+  tags {
+    provisioned_by = "terraform"
+  }
+}
