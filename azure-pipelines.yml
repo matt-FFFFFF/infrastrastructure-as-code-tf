@@ -6,6 +6,8 @@ trigger:
   branches:
     include:
     - master
+    - development
+    - azure-pipelines
   paths:
     include:
     - /tf-files/*
@@ -67,6 +69,6 @@ steps:
 
 - task: PublishBuildArtifacts@1
   inputs:
-    PathtoPublish: $(Agent.WorkFolder)/tfroot/tf-files
+    PathtoPublish: $(Agent.WorkFolder)/tfroot
     ArtifactName: tfplan
   displayName: Copy build artifacts
