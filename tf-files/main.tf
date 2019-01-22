@@ -16,23 +16,3 @@ provider "azurerm" {
   client_secret   = "${var.AZURERM_CLIENT_SECRET}"
   tenant_id       = "${var.AZURERM_TENANT_ID}"
 }
-
-resource "azurerm_resource_group" "testrg" {
-  count    = "1"
-  name     = "testrg"
-  location = "westeurope"
-
-  tags {
-    provisioned_by = "terraform"
-  }
-}
-
-resource "azurerm_resource_group" "testrg2" {
-  count    = "1"
-  name     = "testrg2"
-  location = "westeurope"
-
-  tags {
-    provisioned_by = "terraform"
-  }
-}
