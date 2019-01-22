@@ -2,24 +2,10 @@
 # Matt White @ Microsoft https://github.com/matt-FFFFFF
 
 trigger:
-  batch: true
-  branches:
-    include:
-    - master
-    - development
-    - azure-pipelines
-  paths:
-    include:
-    - /tf-files/*
-    exclude:
-    - /azure-pipelines.yml
-    - Readme.md
-    - .gitignore
+- master
+
 pr:
-  autoCancel: true
-  branches:
-    include:
-    - master
+- master
 
 variables:
   keyvault: tfsecrets-mawhi
@@ -37,13 +23,13 @@ steps:
     keyVaultName: $(keyvault)
     SecretsFilter: '*'
 
-- script: mkdir $(Agent.WorkFolder)/tfroot
-  displayName: "Create 'tfroot' directory"
+- script: mkdir $(Agent.WorkFolder)/tf
+  displayName: "Create 'tf' directory"
 
 - task: CopyFiles@2
   inputs:
     SourceFolder: $(Build.SourcesDirectory)
-    TargetFolder: $(Agent.WorkFolder)/tfroot
+    TargetFolder: $(Agent.WorkFolder)/tf
     Contents: |
      **/*
      !.git/**/*
@@ -56,11 +42,11 @@ steps:
     -backend-config="storage_account_name=$(terraform-backend-storage-account-name)" \
     -backend-config="environment=$(terraform-backend-environment)"
   displayName: Terraform init
-  workingDirectory: $(Agent.WorkFolder)/tfroot/tf-files
+  workingDirectory: $(Agent.WorkFolder)/tf
 
 - script: terraform plan -input=false -out='tfplan'
   displayName: Terraform plan
-  workingDirectory: $(Agent.WorkFolder)/tfroot/tf-files
+  workingDirectory: $(Agent.WorkFolder)/tf
   env:
     ARM_CLIENT_ID: '$(azurerm-client-id)'
     ARM_CLIENT_SECRET: '$(azurerm-client-secret)'
@@ -69,6 +55,6 @@ steps:
 
 - task: PublishBuildArtifacts@1
   inputs:
-    PathtoPublish: $(Agent.WorkFolder)/tfroot
+    PathtoPublish: $(Agent.WorkFolder)/tf
     ArtifactName: tfplan
   displayName: Copy build artifacts
