@@ -62,10 +62,10 @@ steps:
   displayName: Terraform plan
   workingDirectory: $(Agent.WorkFolder)/tfroot/tf-files
   env:
-    ARM_CLIENT_ID: '$(azurerm-client-id)'
-    ARM_CLIENT_SECRET: '$(azurerm-client-secret)'
-    ARM_SUBSCRIPTION_ID: '$(azurerm-subscription-id)'
-    ARM_TENANT_ID: '$(azurerm-tenant-id)'
+    TF_VAR_AZURERM_CLIENT_ID: $(azurerm-client-id)
+    TF_VAR_AZURERM_CLIENT_SECRET: $(azurerm-client-secret)
+    TF_VAR_AZURERM_SUBSCRIPTION_ID: $(azurerm-subscription-id)
+    TF_VAR_AZURERM_TENANT_ID: $(azurerm-tenant-id)
 
 - task: PublishBuildArtifacts@1
   inputs:
