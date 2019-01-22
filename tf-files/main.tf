@@ -4,7 +4,9 @@ terraform {
   backend "azurerm" {}
 }
 
-provider "azurerm" {}
+provider "azurerm" {
+  required_version = "~>1.21"
+}
 
 resource "azurerm_resource_group" "testrg" {
   count    = "1"
