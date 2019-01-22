@@ -2,10 +2,24 @@
 # Matt White @ Microsoft https://github.com/matt-FFFFFF
 
 trigger:
-- master
-
+  batch: true
+  branches:
+    include:
+    - master
+    - development
+    - azure-pipelines
+  paths:
+    include:
+    - /tf-files/*
+    exclude:
+    - /azure-pipelines.yml
+    - Readme.md
+    - .gitignore
 pr:
-- master
+  autoCancel: true
+  branches:
+    include:
+    - master
 
 variables:
   keyvault: tfsecrets-mawhi
@@ -23,30 +37,30 @@ steps:
     keyVaultName: $(keyvault)
     SecretsFilter: '*'
 
-- script: mkdir $(Agent.WorkFolder)/tf
-  displayName: "Create 'tf' directory"
+- script: mkdir $(Agent.WorkFolder)/tfroot
+  displayName: "Create 'tfroot' directory"
 
 - task: CopyFiles@2
   inputs:
     SourceFolder: $(Build.SourcesDirectory)
-    TargetFolder: $(Agent.WorkFolder)/tf
+    TargetFolder: $(Agent.WorkFolder)/tfroot
     Contents: |
      **/*
      !.git/**/*
   displayName: Copy files to staging directory (excluding .git)
 
 - script: |
-    terraform init -input=false -backend-config="container_name=$(terraform-backend-container-name)" \
+    terraform init -no-color -input=false -backend-config="container_name=$(terraform-backend-container-name)" \
     -backend-config="access_key=$(terraform-backend-access-key)" \
     -backend-config="key=$(terraform-backend-key)" \
     -backend-config="storage_account_name=$(terraform-backend-storage-account-name)" \
     -backend-config="environment=$(terraform-backend-environment)"
   displayName: Terraform init
-  workingDirectory: $(Agent.WorkFolder)/tf
+  workingDirectory: $(Agent.WorkFolder)/tfroot/tf-files
 
-- script: terraform plan -input=false -out='tfplan'
+- script: terraform plan -no-color -input=false -out='tfplan'
   displayName: Terraform plan
-  workingDirectory: $(Agent.WorkFolder)/tf
+  workingDirectory: $(Agent.WorkFolder)/tfroot/tf-files
   env:
     ARM_CLIENT_ID: '$(azurerm-client-id)'
     ARM_CLIENT_SECRET: '$(azurerm-client-secret)'
@@ -55,6 +69,7 @@ steps:
 
 - task: PublishBuildArtifacts@1
   inputs:
-    PathtoPublish: $(Agent.WorkFolder)/tf
+    PathtoPublish: $(Agent.WorkFolder)/tfroot
     ArtifactName: tfplan
   displayName: Copy build artifacts
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
