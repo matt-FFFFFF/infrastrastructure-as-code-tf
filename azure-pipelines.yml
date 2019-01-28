@@ -33,10 +33,12 @@ steps:
     curl https://releases.hashicorp.com/terraform/$(terraform-version)/terraform_$(terraform-version)_linux_amd64.zip --output $(Agent.WorkFolder)/terraform.zip
   displayName: Download Terraform
 
-- script: 
-    echo "$(terraform-sha256) terraform.zip" > sha256sums.txt
-    sha256sum --check --status sha256sums.txt
-  displayName: Verify Terraform executable SHA256 checksum
+- script: echo "$(terraform-sha256) terraform.zip" > sha256sums.txt
+  displayName: Create Terraform SHA256 sums file
+  workingDirectory: $(Agent.WorkFolder)
+
+- script: sha256sum --check --status sha256sums.txt
+  displayName: Verify terraform binary SHA256 checksum
   workingDirectory: $(Agent.WorkFolder)
 
 - script: |
