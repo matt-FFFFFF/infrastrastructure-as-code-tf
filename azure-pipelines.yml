@@ -5,16 +5,12 @@ trigger:
   batch: true
   branches:
     include:
-    - master
     - development
     - azure-pipelines
   paths:
     include:
     - /tf-files/*
-    exclude:
-    - /azure-pipelines.yml
-    - Readme.md
-    - .gitignore
+
 pr:
   autoCancel: true
   branches:
@@ -33,19 +29,21 @@ pool:
 
 steps:
 - script: |
-    curl https://releases.hashicorp.com/terraform/$(terraform-version)/terraform_$(terraform-version)_linux_amd64.zip --output terraform.zip
+    curl https://releases.hashicorp.com/terraform/$(terraform-version)/terraform_$(terraform-version)_linux_amd64.zip --output $(Agent.WorkFolder)/terraform.zip
   displayName: Download Terraform
 
 - script: 
     echo "$(terraform-sha256) terraform.zip" > sha256sums.txt
     sha256sum --check --status sha256sums.txt
   displayName: Verify Terraform executable SHA256 checksum
+  workingDirectory: $(Agent.WorkFolder)
 
 - script: |
     unzip ./terraform.zip
     chmod a+x ./terraform
     if [ "Terraform v$(terraform-version)" =! "`./terraform -v`" ]; then exit 1; fi
   displayName: Extract Terraform binary
+  workingDirectory: $(Agent.WorkFolder)
 
 - task: AzureKeyVault@1
   displayName: Get secrets from KeyVault
@@ -67,7 +65,7 @@ steps:
   displayName: Copy files to staging directory (excluding .git)
 
 - script: |
-    ./terraform init -no-color -input=false -backend-config="container_name=$(terraform-backend-container-name)" \
+    $(Agent.WorkFolder)/terraform init -no-color -input=false -backend-config="container_name=$(terraform-backend-container-name)" \
     -backend-config="access_key=$(terraform-backend-access-key)" \
     -backend-config="key=$(terraform-backend-key)" \
     -backend-config="storage_account_name=$(terraform-backend-storage-account-name)" \
@@ -75,7 +73,7 @@ steps:
   displayName: Terraform init
   workingDirectory: $(Agent.WorkFolder)/tfroot/tf-files
 
-- script: ./terraform plan -no-color -input=false -out='tfplan'
+- script: $(Agent.WorkFolder)/terraform plan -no-color -input=false -out='tfplan'
   displayName: Terraform plan
   workingDirectory: $(Agent.WorkFolder)/tfroot/tf-files
   env:
