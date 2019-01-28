@@ -14,4 +14,7 @@ provider "azurerm" {
   client_id       = "${var.AZURERM_CLIENT_ID}"
   subscription_id = "${var.AZURERM_SUBSCRIPTION_ID}"
   tenant_id       = "${var.AZURERM_TENANT_ID}"
+  client_secret   = "${var.AZURERM_CLIENT_SECRET}"
 }
+
+// DO NOT ADD MORE INTO THIS FILE

@@ -5,16 +5,13 @@ trigger:
   batch: true
   branches:
     include:
-    - master
     - development
     - azure-pipelines
   paths:
     include:
     - /tf-files/*
-    exclude:
     - /azure-pipelines.yml
-    - Readme.md
-    - .gitignore
+
 pr:
   autoCancel: true
   branches:
@@ -22,6 +19,8 @@ pr:
     - master
 
 variables:
+  terraform-version: '0.11.11'
+  terraform-sha256: '94504f4a67bad612b5c8e3a4b7ce6ca2772b3c1559630dfd71e9c519e3d6149c'
   keyvault: tfsecrets-mawhi
   azureservice: azurerm-prod
   TF_IN_AUTOMATION: 1
@@ -30,6 +29,26 @@ pool:
   vmImage: 'Ubuntu-16.04'
 
 steps:
+- script: |
+    curl https://releases.hashicorp.com/terraform/$(terraform-version)/terraform_$(terraform-version)_linux_amd64.zip --output $(Agent.WorkFolder)/terraform.zip
+  workingDirectory: $(Agent.WorkFolder)
+  displayName: Download Terraform
+
+- script: echo "$(terraform-sha256) terraform.zip" > sha256sums.txt
+  displayName: Create Terraform SHA256 sums file
+  workingDirectory: $(Agent.WorkFolder)
+
+- script: sha256sum --check --status sha256sums.txt
+  displayName: Verify terraform binary SHA256 checksum
+  workingDirectory: $(Agent.WorkFolder)
+
+- script: |
+    unzip ./terraform.zip
+    chmod a+x ./terraform
+    if [ "Terraform v$(terraform-version)" != "`./terraform -v`" ]; then exit 1; fi
+  displayName: Extract Terraform binary
+  workingDirectory: $(Agent.WorkFolder)
+
 - task: AzureKeyVault@1
   displayName: Get secrets from KeyVault
   inputs:
@@ -50,7 +69,7 @@ steps:
   displayName: Copy files to staging directory (excluding .git)
 
 - script: |
-    terraform init -no-color -input=false -backend-config="container_name=$(terraform-backend-container-name)" \
+    $(Agent.WorkFolder)/terraform init -no-color -input=false -backend-config="container_name=$(terraform-backend-container-name)" \
     -backend-config="access_key=$(terraform-backend-access-key)" \
     -backend-config="key=$(terraform-backend-key)" \
     -backend-config="storage_account_name=$(terraform-backend-storage-account-name)" \
@@ -58,7 +77,7 @@ steps:
   displayName: Terraform init
   workingDirectory: $(Agent.WorkFolder)/tfroot/tf-files
 
-- script: terraform plan -no-color -input=false -out='tfplan'
+- script: $(Agent.WorkFolder)/terraform plan -no-color -input=false -out='tfplan'
   displayName: Terraform plan
   workingDirectory: $(Agent.WorkFolder)/tfroot/tf-files
   env:
