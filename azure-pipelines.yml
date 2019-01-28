@@ -10,6 +10,7 @@ trigger:
   paths:
     include:
     - /tf-files/*
+    - /azure-pipelines.yml
 
 pr:
   autoCancel: true

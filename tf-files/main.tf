@@ -16,3 +16,5 @@ provider "azurerm" {
   tenant_id       = "${var.AZURERM_TENANT_ID}"
   client_secret   = "${var.AZURERM_CLIENT_SECRET}"
 }
+
+// DO NOT ADD MORE INTO THIS FILE
