@@ -41,7 +41,7 @@ steps:
 - script: |
     unzip ./terraform.zip
     chmod a+x ./terraform
-    if [ "Terraform v$(terraform-version)" =! "`./terraform -v`" ]; then exit 1; fi
+    if [ "Terraform v$(terraform-version)" != "`./terraform -v`" ]; then exit 1; fi
   displayName: Extract Terraform binary
   workingDirectory: $(Agent.WorkFolder)
 
