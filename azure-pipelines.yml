@@ -31,6 +31,7 @@ pool:
 steps:
 - script: |
     curl https://releases.hashicorp.com/terraform/$(terraform-version)/terraform_$(terraform-version)_linux_amd64.zip --output $(Agent.WorkFolder)/terraform.zip
+  workingDirectory: $(Agent.WorkFolder)
   displayName: Download Terraform
 
 - script: echo "$(terraform-sha256) terraform.zip" > sha256sums.txt
