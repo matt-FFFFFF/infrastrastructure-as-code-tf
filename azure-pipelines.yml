@@ -22,6 +22,8 @@ pr:
     - master
 
 variables:
+  terraform-version: '0.11.11'
+  terraform-sha256: '94504f4a67bad612b5c8e3a4b7ce6ca2772b3c1559630dfd71e9c519e3d6149c'
   keyvault: tfsecrets-mawhi
   azureservice: azurerm-prod
   TF_IN_AUTOMATION: 1
@@ -30,6 +32,25 @@ pool:
   vmImage: 'Ubuntu-16.04'
 
 steps:
+- script: |
+    curl https://releases.hashicorp.com/terraform/$(terraform-version)/terraform_$(terraform-version)_linux_amd64.zip --output terraform.zip
+    unzip terraform.zip
+    chmod a+x terraform
+    cp terraform /usr/local/bin
+  displayName: Download Terraform
+
+- script: 
+    echo "$(terraform-sha256) terraform.zip" > sha256sums.txt
+    sha256sum --check --status sha256sums.txt
+  displayName: Verify Terraform executable SHA256 checksum
+
+- script: |
+    unzip ./terraform.zip
+    chmod a+x ./terraform
+    cp terraform /usr/local/bin
+    if [ "Terraform v$(terraform-version)" =! "`terraform -v`" ]; then exit 1; fi
+  displayName: Extract Terraform binary to /usr/local/bin
+
 - task: AzureKeyVault@1
   displayName: Get secrets from KeyVault
   inputs:
