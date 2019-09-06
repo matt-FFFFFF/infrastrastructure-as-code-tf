@@ -193,7 +193,7 @@ stages:
 
     - script: find . -not -iname *.json -type f | xargs chmod ug+x
       displayName: Set exec bit on plugins
-      workingDirectory: $(Build.ArtifactStagingDirectory)/tfroot/.terraform/plugins
+      workingDirectory: $(Build.ArtifactStagingDirectory)/tfroot/tf-files/.terraform/plugins
 
     - script: $(Agent.WorkFolder)/terraform apply -no-color -input=false 'tfplan'
       displayName: Terraform apply
