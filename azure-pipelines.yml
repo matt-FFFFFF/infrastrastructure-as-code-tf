@@ -5,12 +5,11 @@ trigger:
   batch: true
   branches:
     include:
-    - development
-    - azure-pipelines
+    - master
+
   paths:
     include:
     - /tf-files/*
-    - /azure-pipelines.yml
 
 pr:
   autoCancel: true
@@ -19,76 +18,80 @@ pr:
     - master
 
 variables:
-  terraform-version: '0.11.11'
-  terraform-sha256: '94504f4a67bad612b5c8e3a4b7ce6ca2772b3c1559630dfd71e9c519e3d6149c'
+  terraform-version: '0.12.8'
+  terraform-sha256: '43806e68f7af396449dd4577c6e5cb63c6dc4a253ae233e1dddc46cf423d808b'
   keyvault: tfsecrets-mawhi
-  azureservice: azurerm-prod
+  azureSubscription: azurerm-prod
   TF_IN_AUTOMATION: 1
+  group: tfbackend
 
-pool:
-  vmImage: 'Ubuntu-16.04'
-
-steps:
-- script: |
-    curl https://releases.hashicorp.com/terraform/$(terraform-version)/terraform_$(terraform-version)_linux_amd64.zip --output $(Agent.WorkFolder)/terraform.zip
-  workingDirectory: $(Agent.WorkFolder)
-  displayName: Download Terraform
-
-- script: echo "$(terraform-sha256) terraform.zip" > sha256sums.txt
-  displayName: Create Terraform SHA256 sums file
-  workingDirectory: $(Agent.WorkFolder)
-
-- script: sha256sum --check --status sha256sums.txt
-  displayName: Verify terraform binary SHA256 checksum
-  workingDirectory: $(Agent.WorkFolder)
-
-- script: |
-    unzip ./terraform.zip
-    chmod a+x ./terraform
-    if [ "Terraform v$(terraform-version)" != "`./terraform -v`" ]; then exit 1; fi
-  displayName: Extract Terraform binary
-  workingDirectory: $(Agent.WorkFolder)
-
-- task: AzureKeyVault@1
-  displayName: Get secrets from KeyVault
-  inputs:
-    ConnectedServiceName: $(azureservice)
-    keyVaultName: $(keyvault)
-    SecretsFilter: '*'
-
-- script: mkdir $(Agent.WorkFolder)/tfroot
-  displayName: "Create 'tfroot' directory"
-
-- task: CopyFiles@2
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)
-    TargetFolder: $(Agent.WorkFolder)/tfroot
-    Contents: |
-     **/*
-     !.git/**/*
-  displayName: Copy files to staging directory (excluding .git)
-
-- script: |
-    $(Agent.WorkFolder)/terraform init -no-color -input=false -backend-config="container_name=$(terraform-backend-container-name)" \
-    -backend-config="access_key=$(terraform-backend-access-key)" \
-    -backend-config="key=$(terraform-backend-key)" \
-    -backend-config="storage_account_name=$(terraform-backend-storage-account-name)" \
-    -backend-config="environment=$(terraform-backend-environment)"
-  displayName: Terraform init
-  workingDirectory: $(Agent.WorkFolder)/tfroot/tf-files
-
-- script: $(Agent.WorkFolder)/terraform plan -no-color -input=false -out='tfplan'
+stages:
+- stage: plan
   displayName: Terraform plan
-  workingDirectory: $(Agent.WorkFolder)/tfroot/tf-files
-  env:
-    TF_VAR_AZURERM_CLIENT_ID: $(azurerm-client-id)
-    TF_VAR_AZURERM_CLIENT_SECRET: $(azurerm-client-secret)
-    TF_VAR_AZURERM_SUBSCRIPTION_ID: $(azurerm-subscription-id)
-    TF_VAR_AZURERM_TENANT_ID: $(azurerm-tenant-id)
+  jobs:
+  - job: planjob
+    displayName: Terraform plan job
+    pool: 'ubuntu-latest'
+    steps:
+    - script: |
+        curl https://releases.hashicorp.com/terraform/$(terraform-version)/terraform_$(terraform-version)_linux_amd64.zip --output $(Agent.WorkFolder)/terraform.zip
+      workingDirectory: $(Agent.WorkFolder)
+      displayName: Download Terraform
 
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: $(Agent.WorkFolder)/tfroot
-    ArtifactName: tfplan
-  displayName: Copy build artifacts
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    - script: echo "$(terraform-sha256) terraform.zip" > sha256sums.txt
+      displayName: Create Terraform SHA256 sums file
+      workingDirectory: $(Agent.WorkFolder)
+
+    - script: sha256sum --check --status sha256sums.txt
+      displayName: Verify terraform binary SHA256 checksum
+      workingDirectory: $(Agent.WorkFolder)
+
+    - script: |
+        unzip ./terraform.zip
+        chmod a+x ./terraform
+        if [ "Terraform v$(terraform-version)" != "`./terraform -v | head -n1`" ]; then exit 1; fi      
+      displayName: Extract Terraform binary
+      workingDirectory: $(Agent.WorkFolder)
+
+    - script: mkdir $(Build.ArtifactStagingDirectory)/tfroot
+      displayName: "Create 'tfroot' directory"
+
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)
+        TargetFolder: $(Build.ArtifactStagingDirectory)/tfroot
+        Contents: |
+          **/*
+          !.git/**/*
+      displayName: Copy files to staging directory (excluding .git)
+
+    - task: AzureCLI@1
+      # -backend-config="access_key=$(terraform-backend-access-key)" \
+      inputs:
+        azureSubscription: $(azureSubscription)
+        scriptLocation: inlineScript
+        inlineScript: |
+          $(Agent.WorkFolder)/terraform init -no-color -input=false -backend-config="container_name=$(terraform-backend-container-name)" \
+          -backend-config="key=$(terraform-backend-key)" \
+          -backend-config="storage_account_name=$(terraform-backend-storage-account-name)" \
+          -backend-config="environment=$(terraform-backend-environment)"
+        workingDirectory: $(Build.ArtifactStagingDirectory)/tfroot/tf-files
+      displayName: Terraform init
+
+    - script: $(Agent.WorkFolder)/terraform plan -no-color -input=false -out='tfplan'
+      enabled: false
+      displayName: Terraform plan
+      workingDirectory: $(Agent.WorkFolder)/tfroot/tf-files
+      env:
+        TF_VAR_AZURERM_CLIENT_ID: $(azurerm-client-id)
+        TF_VAR_AZURERM_CLIENT_SECRET: $(azurerm-client-secret)
+        TF_VAR_AZURERM_SUBSCRIPTION_ID: $(azurerm-subscription-id)
+        TF_VAR_AZURERM_TENANT_ID: $(azurerm-tenant-id)
+
+    - task: PublishBuildArtifacts@1
+      enabled: false
+      inputs:
+        PathtoPublish: $(Agent.WorkFolder)/tfroot
+        ArtifactName: tfplan
+      displayName: Copy build artifacts
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
